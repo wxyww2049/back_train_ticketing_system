@@ -1,0 +1,13 @@
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://101.42.20.21:3306/train?useUnicode=true&characterEncoding=utf-8&useSSL=true&jdbcCompliantTruncation=false
+    username: wxy
+    password:
+server:
+  port: 8080
+
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true
+
