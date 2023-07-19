@@ -13,6 +13,6 @@ public class TestController {
 
     @GetMapping("/test")
     Result test() {
-        return Result.success("test",mainService.getAll());
+        return Result.success("test",mainService.getTrain("0100000Z1630"));
     }
 }
