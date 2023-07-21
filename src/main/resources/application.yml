@@ -4,10 +4,12 @@ spring:
     url: jdbc:mysql://101.42.20.21:3306/train?useUnicode=true&characterEncoding=utf-8&useSSL=true&jdbcCompliantTruncation=false
     username: wxy
     password:
-  redis:
-    database: 0
-    host: 101.42.20.21
-    port: 6379
+
+value:
+  redis-address: "101.42.20.21"
+  redis-port: 6379
+  redis-user:
+  redis-auth: "123456"
 
 server:
   port: 8080
@@ -20,6 +22,3 @@ mybatis:
     map-underscore-to-camel-case: true
     #如果查询结果中包含空值的列，则 MyBatis 在映射的时候，不会映射这个字段
     call-setters-on-nulls: true
-
-
-

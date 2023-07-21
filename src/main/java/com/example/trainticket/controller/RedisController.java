@@ -1,22 +1,31 @@
 package com.example.trainticket.controller;
 
+import com.example.trainticket.bean.RedisConfig;
 import com.example.trainticket.bean.Result;
-import org.springframework.data.redis.core.RedisTemplate;
+import com.example.trainticket.utils.Assert;
+import com.example.trainticket.utils.RedisUtil;
+import jakarta.annotation.PostConstruct;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
+import redis.clients.jedis.Jedis;
+import redis.clients.jedis.JedisPool;
+import redis.clients.jedis.JedisPoolConfig;
+
+import java.time.Duration;
 
 @RestController
 public class RedisController {
 
-    private final RedisTemplate redisTemplate;
+    @Autowired
+    private RedisUtil redisUtil;
 
-    public RedisController(RedisTemplate redisTemplate) {
-        this.redisTemplate = redisTemplate;
+    @GetMapping("/redis")
+    public Result redis() {
+        Jedis jedis = redisUtil.getJedis();
+        jedis.set("wxy","1");
+        return Result.success("redis",jedis.get("wxy"));
     }
-    @GetMapping("save")
-    public Result save(String key, String value){
-        redisTemplate.opsForValue().set("t1", "t2");
-        return Result.success();
-    }
+
 }
 
