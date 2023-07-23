@@ -18,8 +18,8 @@ public class TrainController {
         return trainService.getTrainDetail(trainNo);
     }
     @GetMapping("/queryTrain")
-    Result queryTrain(@RequestParam(value = "startStation", required = true) String startStation,
-                      @RequestParam(value = "endStation", required = true) String endStation,
+    Result queryTrain(@RequestParam(value = "startStation", required = true) Integer startStation,
+                      @RequestParam(value = "endStation", required = true) Integer endStation,
                       @RequestParam(value = "date", required = true) String date) {
         return trainService.queryTrain(startStation, endStation, date);
     }

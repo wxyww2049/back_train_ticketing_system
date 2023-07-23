@@ -23,7 +23,6 @@ public class RedisController {
     @GetMapping("/redis")
     public Result redis() {
         Jedis jedis = redisUtil.getJedis();
-        jedis.set("wxy","1");
         return Result.success("redis",jedis.get("wxy"));
     }
 

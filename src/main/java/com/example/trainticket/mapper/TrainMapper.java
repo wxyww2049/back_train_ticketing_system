@@ -18,4 +18,7 @@ public interface TrainMapper extends BaseMapper<Train> {
 
     @Select("select * from train  where train_no = #{trainNo} limit 1")
     Train getTrainByTrainNo(String trainNo);
+
+    @Select("select * from train")
+    List<Train> getAllTrains();
 }
