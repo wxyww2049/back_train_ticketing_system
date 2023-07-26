@@ -22,3 +22,13 @@ mybatis:
     map-underscore-to-camel-case: true
     #如果查询结果中包含空值的列，则 MyBatis 在映射的时候，不会映射这个字段
     call-setters-on-nulls: true
+
+custom:
+  CARRIAGE_LENGTH: 120
+  YINGZUO: 0,
+  YINGWO: 1,
+  RUANWO: 2,
+  YIDENG: 3,
+  ERDENG: 4,
+  SHANGWU: 5,
+

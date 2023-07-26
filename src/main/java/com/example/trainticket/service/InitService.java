@@ -1,8 +1,10 @@
 package com.example.trainticket.service;
 
+import com.example.trainticket.data.po.Carriage;
 import com.example.trainticket.data.po.Station;
 import com.example.trainticket.data.po.Train;
 import com.example.trainticket.data.po.TrainStation;
+import com.example.trainticket.mapper.CarriageMapper;
 import com.example.trainticket.mapper.StationMapper;
 import com.example.trainticket.mapper.TrainMapper;
 import com.example.trainticket.mapper.TrainStationMapper;
@@ -15,10 +17,9 @@ import org.springframework.stereotype.Component;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Scanner;
-import java.util.zip.CheckedOutputStream;
 
 @Component
-public class InitRedisService implements ApplicationRunner {
+public class InitService implements ApplicationRunner {
 
     @Autowired
     private TrainStationMapper trainStationMapper;
@@ -27,9 +28,9 @@ public class InitRedisService implements ApplicationRunner {
     @Autowired
     private StationMapper stationMapper;
     @Autowired
-    private RedisUtil redisUtil;
+    private CarriageMapper carriageMapper;
 
-    public void processbar(int cnt,int tot) {
+    private void processbar(int cnt,int tot) {
         int tcnt = 100 * cnt / tot;
         StringBuilder tmp = new StringBuilder();
         tmp.append("[");
@@ -53,7 +54,7 @@ public class InitRedisService implements ApplicationRunner {
         for (TrainStation trainStation : trainStations) {
 
             processbar(cnt++, trainStations.size());
-            redisUtil.pushTsForTrain(trainStation);
+            RedisUtil.pushTsForTrain(trainStation);
         }
         System.out.println("");
 
@@ -63,7 +64,7 @@ public class InitRedisService implements ApplicationRunner {
         trainStations.sort(Comparator.comparing(TrainStation::getTrainNo));
         for (TrainStation trainStation : trainStations) {
             processbar(cnt++, trainStations.size());
-            redisUtil.pushTsForStation(trainStation);
+            RedisUtil.pushTsForStation(trainStation);
         }
         System.out.println("");
     }
@@ -73,7 +74,7 @@ public class InitRedisService implements ApplicationRunner {
         int cnt = 0;
         for(Train train : trains) {
             processbar(cnt++, trains.size());
-            redisUtil.setTrain(train);
+            RedisUtil.setTrain(train);
         }
         System.out.println("");
     }
@@ -84,9 +85,37 @@ public class InitRedisService implements ApplicationRunner {
         int cnt = 0;
         for(Station station : stations) {
             processbar(cnt++, stations.size());
-            redisUtil.setStation(station);
+            RedisUtil.setStation(station);
         }
         System.out.println("");
+    }
+
+    private void initRedis() {
+        System.out.println("====init redis====");
+        try {
+            //按照车站编号插入到列车中，便于查询列车信息
+            RedisUtil.flushAll();
+            InitTs();
+            InitStation();
+            InitTrain();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        System.out.println("====init redis success====");
+    }
+    private void initCarriage() {
+        System.out.println("====init Carriage====");
+        try {
+            List<Carriage> carriages =  carriageMapper.getAllCarriage();
+            int cnt = 0,tot = carriages.size();
+            for(Carriage carriage : carriages) {
+                processbar(cnt++,tot);
+                RedisUtil.updCarriage(carriage);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        System.out.println("\n====init Carriage success====");
     }
 
     @Override
@@ -94,20 +123,15 @@ public class InitRedisService implements ApplicationRunner {
         Scanner scanner = new Scanner(System.in);
         System.out.println("init redis? (y/n)");
         String s = scanner.nextLine();
-        scanner.close();
         if(s.equals("y") || s.equals("Y")) {
-            System.out.println("====init redis====");
-            try {
-                //按照车站编号插入到列车中，便于查询列车信息
-                redisUtil.flushAll();
-                InitTs();
-                InitStation();
-                InitTrain();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-            System.out.println("====init redis success====");
+            initRedis();
         }
+        System.out.println("init Carriage? (y/n)");
+        s = scanner.nextLine();
+        if(s.equals("y") || s.equals("Y")) {
+            initCarriage();
+        }
+
         System.out.println("server start success!");
     }
 

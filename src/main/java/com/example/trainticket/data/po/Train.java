@@ -21,6 +21,8 @@ public class Train {
     private String isStart;
     private String endStationName;
     private String trainCode;
+    private long seatTypes;//6进制数，表示每个车厢的类型
+    private Integer carriageNum;//车厢数
 
     @Override
     public String toString() {

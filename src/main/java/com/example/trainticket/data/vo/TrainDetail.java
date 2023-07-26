@@ -31,6 +31,7 @@ public class TrainDetail {
     private String startStationName;
     private String endStationName;
     private String trainCode;
+    private Integer seatNum;//车厢数
 
     private List<TrainStation> stations;
 

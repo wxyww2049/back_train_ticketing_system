@@ -17,12 +17,10 @@ import java.time.Duration;
 @RestController
 public class RedisController {
 
-    @Autowired
-    private RedisUtil redisUtil;
 
     @GetMapping("/redis")
     public Result redis() {
-        Jedis jedis = redisUtil.getJedis();
+        Jedis jedis = RedisUtil.getJedis();
         return Result.success("redis",jedis.get("wxy"));
     }
 

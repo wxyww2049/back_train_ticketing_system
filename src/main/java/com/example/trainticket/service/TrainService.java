@@ -22,8 +22,8 @@ public class TrainService {
     @Autowired
     TrainMapper trainMapper;
 
-    @Autowired
-    RedisUtil redisUtil;
+//    @Autowired
+//    RedisUtil redisUtil;
 
     public Result getTrainDetail(String trainNo) {
         Train train = trainMapper.getTrainByTrainNo(trainNo);
@@ -38,8 +38,8 @@ public class TrainService {
         try {
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm");
 
-            List<TrainStation>  startStations = redisUtil.getTsForStation(startStation);
-            List<TrainStation>  endStations = redisUtil.getTsForStation(endStation);
+            List<TrainStation>  startStations = RedisUtil.getTsForStation(startStation);
+            List<TrainStation>  endStations = RedisUtil.getTsForStation(endStation);
             //得到列车已经是按照train_no排序后的，只要用双指针求即可。
 
             int p = 0;
@@ -55,8 +55,9 @@ public class TrainService {
                         && ss.getStationNo() < endStations.get(p).getStationNo()
 //                        && ss.getStartTime().compareTo(Time.valueOf(LocalDateTime.now().plusMinutes(30).format(formatter))) > 0
                 ) {
-                    BaseRoute baseRoute = new  BaseRoute(redisUtil.getTrain(ss.getTrainNo()),ss,endStations.get(p));
+                    BaseRoute baseRoute = new  BaseRoute(RedisUtil.getTrain(ss.getTrainNo()),ss,endStations.get(p));
 //                    baseRoute.setPrice(redisUtil.getPrice(ss.getTrainNo(), ss.getStationNo(), endStations.get(p).getStationNo()));
+
                     res.add(baseRoute);
 
                 }
@@ -69,6 +70,7 @@ public class TrainService {
             }
         }
         catch (Exception e) {
+            e.printStackTrace();
             return Result.error("查询失败");
         }
     }

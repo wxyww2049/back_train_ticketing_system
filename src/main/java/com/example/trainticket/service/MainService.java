@@ -4,6 +4,7 @@ import com.example.trainticket.data.po.Test;
 import com.example.trainticket.data.po.Train;
 import com.example.trainticket.mapper.TestMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import java.util.List;
 
@@ -19,4 +20,5 @@ public class MainService {
         System.out.println(res);
         return res;
     }
+
 }
