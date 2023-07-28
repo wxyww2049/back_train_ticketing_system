@@ -74,7 +74,7 @@ public class BaseRoute {
         this.cntWz = 120 * 10;
 
         for(int i = start.getStationNo() + 1;i <= end.getStationNo();i++) {
-            System.out.println("i = " + i);
+//            System.out.println("i = " + i);
             BitSet seat = Objects.requireNonNull(RedisUtil.getCarriage(train.getTrainNo(), i)).getOrginSeat();
             long flg = train.getSeatTypes();
             int pos = 9 * 120 + 1;

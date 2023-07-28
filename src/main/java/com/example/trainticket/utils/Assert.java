@@ -1,6 +1,8 @@
 package com.example.trainticket.utils;
 
 
+import com.example.trainticket.annotation.CheckNull;
+
 import java.lang.reflect.Field;
 
 public class Assert {

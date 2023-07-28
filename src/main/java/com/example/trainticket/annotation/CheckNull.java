@@ -1,4 +1,4 @@
-package com.example.trainticket.utils;
+package com.example.trainticket.annotation;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

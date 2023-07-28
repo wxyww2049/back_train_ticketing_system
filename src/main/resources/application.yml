@@ -32,3 +32,6 @@ custom:
   ERDENG: 4,
   SHANGWU: 5,
 
+jwt:
+  secret: "fjoewjfowejoifwefweopfkweo"
+  expiration: 3600000

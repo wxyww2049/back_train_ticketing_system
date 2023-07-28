@@ -34,5 +34,4 @@ public class TrainDetail {
     private Integer seatNum;//车厢数
 
     private List<TrainStation> stations;
-
 }
