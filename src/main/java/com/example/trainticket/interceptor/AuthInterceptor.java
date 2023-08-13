@@ -2,15 +2,18 @@ package com.example.trainticket.interceptor;
 
 import com.example.trainticket.annotation.Auth;
 import com.example.trainticket.bean.Result;
+import com.example.trainticket.bean.StatusCode;
 import com.example.trainticket.utils.JwtUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.HandlerInterceptor;
 
+@Slf4j
 @Component
 public class AuthInterceptor implements HandlerInterceptor {
 
@@ -22,14 +25,15 @@ public class AuthInterceptor implements HandlerInterceptor {
             Auth auth = handlerMethod.getMethodAnnotation(Auth.class);
 
             if (auth == null) {
+                log.info("auth is null");
                 return true;
             }
-
+            log.info("auth is not null");
             String[] identify = auth.identify();
 
             try {
+                log.info("start auth");
                 String token = request.getHeader("token");
-                // 这里仅做比对，如有权限等级等需求，可自行修改校验逻辑
                 String userIdentify = jwtUtil.verifyToken(token).get("role").asString();
                 for (String i : identify) {
                     if (userIdentify.equals(i)) {
@@ -42,9 +46,11 @@ public class AuthInterceptor implements HandlerInterceptor {
                 return false;
             }
             catch (Exception e) {
+                log.info("auth failed");
                 e.printStackTrace();
                 response.setContentType("application/json;charset=UTF-8");
-                response.getWriter().println(Result.error("鉴权失败"));
+                response.getWriter().println(Result.error(StatusCode.NO_PERMISSION));
+                return false;
             }
         }
 

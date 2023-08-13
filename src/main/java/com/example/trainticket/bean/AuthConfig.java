@@ -1,4 +1,4 @@
-package com.example.trainticket.config;
+package com.example.trainticket.bean;
 
 import com.example.trainticket.interceptor.AuthInterceptor;
 import jakarta.annotation.Resource;

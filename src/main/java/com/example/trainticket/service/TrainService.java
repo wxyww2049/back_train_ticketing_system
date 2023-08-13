@@ -22,8 +22,6 @@ public class TrainService {
     @Autowired
     TrainMapper trainMapper;
 
-//    @Autowired
-//    RedisUtil redisUtil;
 
     public Result getTrainDetail(String trainNo) {
         Train train = trainMapper.getTrainByTrainNo(trainNo);
@@ -37,14 +35,14 @@ public class TrainService {
     public Result queryTrain(Integer startStation, Integer endStation, String date) {
         try {
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm");
-
             List<TrainStation>  startStations = RedisUtil.getTsForStation(startStation);
             List<TrainStation>  endStations = RedisUtil.getTsForStation(endStation);
-            //得到列车已经是按照train_no排序后的，只要用双指针求即可。
-
+            // 得到列车已经是按照train_no排序后的，只要用双指针求即可。
+//            System.out.println("======" + startStations.size() + "=======");
             int p = 0;
             List<BaseRoute> res = new ArrayList<BaseRoute>();
             for(TrainStation ss : startStations) {
+
                 while(p < endStations.size() && endStations.get(p).getTrainNo().compareTo(ss.getTrainNo()) > 0) {
                     p++;
                 }
@@ -57,9 +55,7 @@ public class TrainService {
                 ) {
                     BaseRoute baseRoute = new  BaseRoute(RedisUtil.getTrain(ss.getTrainNo()),ss,endStations.get(p));
 //                    baseRoute.setPrice(redisUtil.getPrice(ss.getTrainNo(), ss.getStationNo(), endStations.get(p).getStationNo()));
-
                     res.add(baseRoute);
-
                 }
             }
             if(res.size() > 0) {

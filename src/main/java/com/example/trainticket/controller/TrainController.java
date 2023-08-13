@@ -6,9 +6,9 @@ import com.example.trainticket.data.vo.TrainDetail;
 import com.example.trainticket.service.CarriageService;
 import com.example.trainticket.service.TrainService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
 
 @RestController
 public class TrainController {
@@ -32,4 +32,6 @@ public class TrainController {
                          @RequestParam(value = "stationNo", required = true) Integer stationNo) {
         return  carriageService.getCarriageByTrainNoAndStationNo(trainNo,stationNo);
     }
+
+
 }
