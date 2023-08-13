@@ -22,4 +22,7 @@ public interface CarriageMapper {
 
     @Select("select seat from carriage where train_no = #{trainNo} and station_no = #{stationNo} limit 1")
     BitSet getSeat(String trainNo, Integer stationNo);
+
+    @Update("update carriage set seat = #{seat} where train_no = #{trainNo} and station_no = #{stationNo}")
+    void updateSeat(Carriage carriage);
 }

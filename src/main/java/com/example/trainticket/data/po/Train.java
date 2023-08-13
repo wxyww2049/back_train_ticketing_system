@@ -21,7 +21,7 @@ public class Train {
     private String isStart;
     private String endStationName;
     private String trainCode;
-    private long seatTypes;//6进制数，表示每个车厢的类型
+    private long seatTypes;//6进制数，表示每个车厢的类型, 0:硬座,1:硬卧,2:软卧,3:一等,4:二等,5:商务
     private Integer carriageNum;//车厢数
 
     @Override

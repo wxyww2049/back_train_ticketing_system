@@ -18,5 +18,8 @@ public class CarriageService {
 //        System.out.println(res.getOrginSeat().toString());
         return Result.success("success",res);
     }
+
+
+
 }
 
