@@ -99,20 +99,48 @@ public class TrainService {
         return false;
     }
     @Transactional
-    public Result insertTicket(Ticket ticket,int pos,int fromNo,int toNo) {
+    public Result insertTicket(Ticket ticket,int pos,int fromNo,int toNo,BitSet ansSeat,long seatTypes) {
+        if(pos == -1) {
+            for(int i = fromNo + 1;i <= toNo;++i) {
+                BitSet seat = Objects.requireNonNull(RedisUtil.getCarriage(ticket.getTrainNo(), i)).getOrginSeat();
+                long flg = seatTypes;
+                int tpos = 9 * 120 + 1;
+                for(int j = 0;j < 10;++j) {
+                    long type = flg % 6;
+                    flg /= 6;
+                    boolean flag = false;
+                    if(type == 0 || type == 4) {
+                        for(int k = tpos;k < tpos + 120;++k) {
+                            if(seat.get(k) && !ansSeat.get(k)) {
+                                seat.set(k,false);
+                                flag = true;
+                                break;
+                            }
+                        }
+                    }
+                    if(flag) break;
+                    tpos -= 120;
+                }
+                carriageMapper.updateSeat(new Carriage(ticket.getTrainNo(), i, seat));
+                RedisUtil.updCarriage(new Carriage(ticket.getTrainNo(), i, seat));
+            }
+        }
+        else {
+            for(int i = fromNo + 1;i <= toNo;i++) {
+                BitSet seat = Objects.requireNonNull(RedisUtil.getCarriage(ticket.getTrainNo(), i)).getOrginSeat();
+                seat.set(pos,false);
+                carriageMapper.updateSeat(new Carriage(ticket.getTrainNo(), i, seat));
+                RedisUtil.updCarriage(new Carriage(ticket.getTrainNo(), i, seat));
+            }
+        }
+
         Integer tid = ticketMapper.findMaxId();
         if(tid == null) tid = 0;
         ticket.setId(tid + 1);
         ticketMapper.insertTicket(ticket);
-
-        for(int i = fromNo + 1;i <= toNo;i++) {
-            BitSet seat = Objects.requireNonNull(RedisUtil.getCarriage(ticket.getTrainNo(), i)).getOrginSeat();
-            seat.set(pos,false);
-            RedisUtil.updCarriage(new Carriage(ticket.getTrainNo(), i, seat));
-            carriageMapper.updateSeat(new Carriage(ticket.getTrainNo(), i, seat));
-        }
         return Result.success("success", ticket);
     }
+
     public Result buyTicket(Integer userId,String trainNo, Integer fromStationCode,Integer toStationCode,Integer seatType,Integer seatPos) {//seatType为-1表示无座票
         try {
             List<TrainStation> trainStations = RedisUtil.getTsForTrain(trainNo);
@@ -131,28 +159,40 @@ public class TrainService {
                 return Result.error("购票失败");
             }
             Train train = RedisUtil.getTrain(trainNo);
-            if(seatType == -1) {
+            BitSet ansSeat = null;
 
-                /**
-                 * 填补上无座票的代码
-                 */
-
+            for(int i = fromStation.getStationNo() + 1;i <= toStation.getStationNo();i++) {
+                BitSet seat = Objects.requireNonNull(RedisUtil.getCarriage(trainNo, i)).getOrginSeat();
+                if(ansSeat == null) {
+                    ansSeat = seat;
+                } else {
+                    ansSeat.and(seat);
+                }
+            }
+            if(seatType == -1) {//如果购买的是无座票
+                Ticket ticket = new Ticket();
+                ticket.setStatus(1);
+                ticket.setStartStationCode(fromStationCode);
+                ticket.setEndStationCode(toStationCode);
+                ticket.setTrainNo(trainNo);
+                ticket.setStartStationName(fromStation.getStationName());
+                ticket.setEndStationName(toStation.getStationName());
+                ticket.setTrainCode(train.getTrainCode());
+                ticket.setIsStart(fromStation.getStationNo() == 0 ? 1 : 0);
+                ticket.setIsEnd(toStation.getStationName().equals(train.getEndStationName()) ? 1 : 0);
+                ticket.setSeat(-1);
+                ticket.setStartTime(fromStation.getStartTime());
+                ticket.setEndTime(toStation.getStartTime());
+                ticket.setArriveDayDiff(toStation.getArriveDayDiff() - fromStation.getArriveDayDiff());
+                ticket.setSeatType(-1);
+                ticket.setUserId(userId);
+                ticket.setPrice(toStation.getWz() - fromStation.getWz());
+                return insertTicket(ticket,-1,fromStation.getStationNo(),toStation.getStationNo(),ansSeat,train.getSeatTypes());
             }
             else if(seatType > 5) {
-                return Result.error("不存在的座位类型");
+                 return Result.error("不存在的座位类型");
             }
-            else {
-                BitSet ansSeat = null;
-
-                for(int i = fromStation.getStationNo() + 1;i <= toStation.getStationNo();i++) {
-                    BitSet seat = Objects.requireNonNull(RedisUtil.getCarriage(trainNo, i)).getOrginSeat();
-
-                    if(ansSeat == null) {
-                        ansSeat = seat;
-                    } else {
-                        ansSeat.and(seat);
-                    }
-                }
+            else {//如果购买有座票
                 int ansId = -1;
                 int ansCarriage = -1;
                 assert train != null;
@@ -216,7 +256,7 @@ public class TrainService {
                     ticket.setArriveDayDiff(toStation.getArriveDayDiff() - fromStation.getArriveDayDiff());
                     ticket.setSeatType(seatType);
                     ticket.setUserId(userId);
-                    return insertTicket(ticket,ansId,fromStation.getStationNo(),toStation.getStationNo());
+                    return insertTicket(ticket,ansId,fromStation.getStationNo(),toStation.getStationNo(),null,0);
                 }
                 else {
                     return Result.error("购票失败");
@@ -224,7 +264,6 @@ public class TrainService {
 
             }
 
-            return Result.success("success", null);
         }
         catch (Exception e) {
             e.printStackTrace();
