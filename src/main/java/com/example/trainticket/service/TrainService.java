@@ -1,10 +1,13 @@
 package com.example.trainticket.service;
 
+import cn.hutool.core.lang.Console;
+import com.alibaba.fastjson.JSON;
+import com.alipay.api.AlipayClient;
+import com.alipay.api.internal.util.AlipaySignature;
+import com.alipay.api.request.AlipayTradePagePayRequest;
+import com.example.trainticket.bean.AlipayConfig;
 import com.example.trainticket.bean.Result;
-import com.example.trainticket.data.po.Carriage;
-import com.example.trainticket.data.po.Ticket;
-import com.example.trainticket.data.po.Train;
-import com.example.trainticket.data.po.TrainStation;
+import com.example.trainticket.data.po.*;
 import com.example.trainticket.data.vo.BaseRoute;
 import com.example.trainticket.data.vo.TrainDetail;
 import com.example.trainticket.mapper.CarriageMapper;
@@ -14,11 +17,10 @@ import com.example.trainticket.utils.RedisUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.lang.constant.Constable;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.BitSet;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 @Service
 public class TrainService {
@@ -29,6 +31,14 @@ public class TrainService {
     @Autowired
     CarriageMapper carriageMapper;
 
+    @Autowired
+    AlipayConfig alipayConfig;
+
+    private final AlipayClient alipayClient;
+
+    public TrainService(AlipayClient alipayClient) {
+        this.alipayClient = alipayClient;
+    }
     public Result getTrainDetail(String trainNo) {
         Train train = trainMapper.getTrainByTrainNo(trainNo);
         if(train == null) {
@@ -98,6 +108,60 @@ public class TrainService {
         }
         return false;
     }
+    public Result payForTicket(Integer ticket_id) {
+        try {
+            Ticket ticket = ticketMapper.getTicketById(ticket_id);
+            if(ticket == null) {
+                return Result.error("未找到对应车票");
+            }
+            if(ticket.getStatus() == 2) {
+                return Result.error("该车票已经支付");
+            }
+            else if(ticket.getStatus() == 3) {
+                return Result.error("该车票已经退票");
+            }
+            else if(ticket.getStatus() == 4) {
+                return Result.error("该车票已经取消");
+            }
+            Alipay alipay = new Alipay(
+                    "test2" + Integer.toString(ticket.getId()),
+                    ticket.getPrice(),
+                    "从" + ticket.getStartStationName() + "到" + ticket.getEndStationName() + "的" + ticket.getTrainCode() + "次列车",
+                     ticket.getTrainNo() + ticket.getStartStationCode() + ticket.getEndStationCode(),
+                    "FAST_INSTANT_TRADE_PAY",
+                    "10m");
+
+            AlipayTradePagePayRequest alipayRequest = new AlipayTradePagePayRequest();
+            alipayRequest.setBizContent(JSON.toJSONString(alipay));
+            System.out.println("====" + alipayConfig.getNotifyUrl() + "====" + alipayConfig.getReturnUrl());
+            alipayRequest.setNotifyUrl(alipayConfig.getNotifyUrl());//支付成功后发送异步消息的地址（发送到后端）
+            alipayRequest.setReturnUrl(alipayConfig.getReturnUrl());//用户支付成功后跳转到的页面（跳转到前端）
+            String result = alipayClient.pageExecute(alipayRequest).getBody();
+            return Result.success(result);
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+            return Result.error("支付失败");
+        }
+    }
+    public Boolean payCallback(Map<String,String> params) {
+        try {
+            //校验是否是来自支付宝的通知
+            //切记alipaypublickey是支付宝的公钥，请去open.alipay.com对应应用下查看。
+            //boolean AlipaySignature.rsaCheckV1(Map<String, String> params, String publicKey, String charset, String sign_type)
+            boolean flag = AlipaySignature.rsaCheckV1 (params,alipayConfig.getAlipayPublicKey(), "UTF-8","RSA2");
+            if(flag) {
+                ticketMapper.updTicketStatus(Integer.parseInt(params.get("out_trade_no")),2);
+                return true;
+            }
+            else return false;
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
     @Transactional
     public Result insertTicket(Ticket ticket,int pos,int fromNo,int toNo,BitSet ansSeat,long seatTypes) {
         if(pos == -1) {

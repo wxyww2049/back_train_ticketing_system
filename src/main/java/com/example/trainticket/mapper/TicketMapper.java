@@ -7,6 +7,7 @@ import com.example.trainticket.data.po.TrainStation;
 import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Select;
+import org.apache.ibatis.annotations.Update;
 
 import java.util.List;
 
@@ -22,4 +23,10 @@ public interface TicketMapper extends BaseMapper<Train> {
 
     @Select("select * from ticket where user_id = #{userId}")
     List<Ticket> getTicketsByUserId(Integer userId);
+
+    @Select("select * from ticket where id = #{id} limit 1")
+    Ticket getTicketById(Integer id);
+
+    @Update("update ticket set status = #{status} where id = #{id}")
+    void updTicketStatus(Integer id, Integer status);
 }
