@@ -13,7 +13,9 @@ import com.example.trainticket.data.vo.TrainDetail;
 import com.example.trainticket.mapper.CarriageMapper;
 import com.example.trainticket.mapper.TicketMapper;
 import com.example.trainticket.mapper.TrainMapper;
+import com.example.trainticket.mapper.TrainStationMapper;
 import com.example.trainticket.utils.RedisUtil;
+import com.example.trainticket.utils.SerializationUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,6 +30,8 @@ public class TrainService {
     TrainMapper trainMapper;
     @Autowired
     TicketMapper ticketMapper;
+    @Autowired
+    TrainStationMapper trainStationMapper;
     @Autowired
     CarriageMapper carriageMapper;
 
@@ -124,7 +128,7 @@ public class TrainService {
                 return Result.error("该车票已经取消");
             }
             Alipay alipay = new Alipay(
-                    "test2" + Integer.toString(ticket.getId()),
+                    Integer.toString(ticket.getId()),
                     ticket.getPrice(),
                     "从" + ticket.getStartStationName() + "到" + ticket.getEndStationName() + "的" + ticket.getTrainCode() + "次列车",
                      ticket.getTrainNo() + ticket.getStartStationCode() + ticket.getEndStationCode(),
