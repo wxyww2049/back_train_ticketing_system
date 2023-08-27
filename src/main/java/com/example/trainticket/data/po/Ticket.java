@@ -36,4 +36,7 @@ public class Ticket {
     private Integer arriveDayDiff;
     private Integer seatType;
     private Integer userId;
+    private String name;
+    private String idCode;
+    private Integer orderId;
 }

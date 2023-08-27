@@ -1,6 +1,7 @@
 package com.example.trainticket.service;
 
 import cn.hutool.core.lang.Console;
+import cn.hutool.system.UserInfo;
 import com.alibaba.fastjson.JSON;
 import com.alipay.api.AlipayClient;
 import com.alipay.api.internal.util.AlipaySignature;
@@ -9,13 +10,11 @@ import com.example.trainticket.bean.AlipayConfig;
 import com.example.trainticket.bean.Result;
 import com.example.trainticket.data.po.*;
 import com.example.trainticket.data.vo.BaseRoute;
+import com.example.trainticket.data.vo.OrderTicket;
+import com.example.trainticket.data.vo.SempleUserInfo;
 import com.example.trainticket.data.vo.TrainDetail;
-import com.example.trainticket.mapper.CarriageMapper;
-import com.example.trainticket.mapper.TicketMapper;
-import com.example.trainticket.mapper.TrainMapper;
-import com.example.trainticket.mapper.TrainStationMapper;
+import com.example.trainticket.mapper.*;
 import com.example.trainticket.utils.RedisUtil;
-import com.example.trainticket.utils.SerializationUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -37,6 +36,8 @@ public class TrainService {
 
     @Autowired
     AlipayConfig alipayConfig;
+    @Autowired
+    OrderMapper orderMapper;
 
     private final AlipayClient alipayClient;
 
@@ -112,32 +113,31 @@ public class TrainService {
         }
         return false;
     }
-    public Result payForTicket(Integer ticket_id) {
+    public Result payForTicket(Integer order_id) {
         try {
-            Ticket ticket = ticketMapper.getTicketById(ticket_id);
-            if(ticket == null) {
-                return Result.error("未找到对应车票");
+            Order order = orderMapper.getOrderById(order_id);
+            if(order == null) {
+                return Result.error("未找到对应订单");
             }
-            if(ticket.getStatus() == 2) {
+            if(order.getStatus() == 2) {
                 return Result.error("该车票已经支付");
             }
-            else if(ticket.getStatus() == 3) {
+            else if(order.getStatus() == 3) {
                 return Result.error("该车票已经退票");
             }
-            else if(ticket.getStatus() == 4) {
+            else if(order.getStatus() == 4) {
                 return Result.error("该车票已经取消");
             }
             Alipay alipay = new Alipay(
-                    Integer.toString(ticket.getId()),
-                    ticket.getPrice(),
-                    "从" + ticket.getStartStationName() + "到" + ticket.getEndStationName() + "的" + ticket.getTrainCode() + "次列车",
-                     ticket.getTrainNo() + ticket.getStartStationCode() + ticket.getEndStationCode(),
+                    Integer.toString(order.getId()),
+                    order.getPrice(),
+                    "从" + order.getStartStationName() + "到" + order.getEndStationName() + "的" + order.getTrainCode() + "次列车",
+                     order.getTrainNo() + order.getStartStationCode() + order.getEndStationCode(),
                     "FAST_INSTANT_TRADE_PAY",
                     "10m");
 
             AlipayTradePagePayRequest alipayRequest = new AlipayTradePagePayRequest();
             alipayRequest.setBizContent(JSON.toJSONString(alipay));
-            System.out.println("====" + alipayConfig.getNotifyUrl() + "====" + alipayConfig.getReturnUrl());
             alipayRequest.setNotifyUrl(alipayConfig.getNotifyUrl());//支付成功后发送异步消息的地址（发送到后端）
             alipayRequest.setReturnUrl(alipayConfig.getReturnUrl());//用户支付成功后跳转到的页面（跳转到前端）
             String result = alipayClient.pageExecute(alipayRequest).getBody();
@@ -148,6 +148,12 @@ public class TrainService {
             return Result.error("支付失败");
         }
     }
+
+    public void finishPay(Integer orderId) {
+        ticketMapper.updStatusByOrderId(orderId,2);
+        orderMapper.updOrderStatus(orderId,2);
+    }
+
     public Boolean payCallback(Map<String,String> params) {
         try {
             //校验是否是来自支付宝的通知
@@ -155,7 +161,7 @@ public class TrainService {
             //boolean AlipaySignature.rsaCheckV1(Map<String, String> params, String publicKey, String charset, String sign_type)
             boolean flag = AlipaySignature.rsaCheckV1 (params,alipayConfig.getAlipayPublicKey(), "UTF-8","RSA2");
             if(flag) {
-                ticketMapper.updTicketStatus(Integer.parseInt(params.get("out_trade_no")),2);
+                finishPay(Integer.parseInt(params.get("out_trade_no")));
                 return true;
             }
             else return false;
@@ -167,7 +173,7 @@ public class TrainService {
     }
 
     @Transactional
-    public Result insertTicket(Ticket ticket,int pos,int fromNo,int toNo,BitSet ansSeat,long seatTypes) {
+    public Boolean insertTicket(Ticket ticket,int pos,int fromNo,int toNo,BitSet ansSeat,long seatTypes) {
         if(pos == -1) {
             for(int i = fromNo + 1;i <= toNo;++i) {
                 BitSet seat = Objects.requireNonNull(RedisUtil.getCarriage(ticket.getTrainNo(), i)).getOrginSeat();
@@ -206,10 +212,43 @@ public class TrainService {
         if(tid == null) tid = 0;
         ticket.setId(tid + 1);
         ticketMapper.insertTicket(ticket);
-        return Result.success("success", ticket);
+       return true;
     }
+    public Result buyTicket(Integer userId,String trainNo, Integer fromStationCode,Integer toStationCode,Integer seatType,Integer seatPos,List<SempleUserInfo>  fellowers) {
+        try {
+            Order order = null;
+            Integer orderId  = orderMapper.findMaxId();
+            if(orderId == null) orderId = 0;
+            orderId++;
+            Double pri =  0.0;
+            for(SempleUserInfo fellow : fellowers) {
+                Ticket ticket = buyTicketForOne( userId, trainNo,  fromStationCode, toStationCode, seatType, seatPos,fellow,orderId);
+                if(ticket == null) {
+                    return Result.error("购票失败");
+                }
+                else {
+                    pri += ticket.getPrice();
+                    if(order == null) order = new Order(ticket);
+                }
+            }
 
-    public Result buyTicket(Integer userId,String trainNo, Integer fromStationCode,Integer toStationCode,Integer seatType,Integer seatPos) {//seatType为-1表示无座票
+
+            /**
+             * 1.生成订单
+             */
+            if(order == null) return Result.error("购票失败");
+            order.setPrice(pri);
+            order.setId(orderId);
+            orderMapper.addOrder(order);
+
+            return payForTicket(orderId);
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+            return Result.error("购票失败");
+        }
+    }
+    public Ticket buyTicketForOne(Integer userId,String trainNo, Integer fromStationCode,Integer toStationCode,Integer seatType,Integer seatPos,SempleUserInfo fellower,Integer order_id) {//seatType为-1表示无座票
         try {
             List<TrainStation> trainStations = RedisUtil.getTsForTrain(trainNo);
             TrainStation fromStation = null;
@@ -224,7 +263,7 @@ public class TrainService {
                 }
             }
             if(fromStation == null || toStation == null) {
-                return Result.error("购票失败");
+                return null;
             }
             Train train = RedisUtil.getTrain(trainNo);
             BitSet ansSeat = null;
@@ -249,16 +288,22 @@ public class TrainService {
                 ticket.setIsStart(fromStation.getStationNo() == 0 ? 1 : 0);
                 ticket.setIsEnd(toStation.getStationName().equals(train.getEndStationName()) ? 1 : 0);
                 ticket.setSeat(-1);
+                ticket.setOrderId(order_id);
                 ticket.setStartTime(fromStation.getStartTime());
                 ticket.setEndTime(toStation.getStartTime());
                 ticket.setArriveDayDiff(toStation.getArriveDayDiff() - fromStation.getArriveDayDiff());
                 ticket.setSeatType(-1);
                 ticket.setUserId(userId);
                 ticket.setPrice(toStation.getWz() - fromStation.getWz());
-                return insertTicket(ticket,-1,fromStation.getStationNo(),toStation.getStationNo(),ansSeat,train.getSeatTypes());
+                ticket.setIdCode(fellower.getIdCode());
+                ticket.setName(fellower.getUserName());
+                if(insertTicket(ticket,-1,fromStation.getStationNo(),toStation.getStationNo(),ansSeat,train.getSeatTypes())) {
+                    return ticket;
+                }
+                else return null;
             }
             else if(seatType > 5) {
-                 return Result.error("不存在的座位类型");
+                 return null;
             }
             else {//如果购买有座票
                 int ansId = -1;
@@ -323,11 +368,15 @@ public class TrainService {
                     ticket.setEndTime(toStation.getStartTime());
                     ticket.setArriveDayDiff(toStation.getArriveDayDiff() - fromStation.getArriveDayDiff());
                     ticket.setSeatType(seatType);
+                    ticket.setOrderId(order_id);
                     ticket.setUserId(userId);
-                    return insertTicket(ticket,ansId,fromStation.getStationNo(),toStation.getStationNo(),null,0);
+                    if(insertTicket(ticket,ansId,fromStation.getStationNo(),toStation.getStationNo(),null,0)) {
+                        return ticket;
+                    }
+                    else return null;
                 }
                 else {
-                    return Result.error("购票失败");
+                    return null;
                 }
 
             }
@@ -335,7 +384,7 @@ public class TrainService {
         }
         catch (Exception e) {
             e.printStackTrace();
-            return Result.error("购票失败");
+            return null;
         }
     }
 }

@@ -18,4 +18,6 @@ public interface UserMapper {
     @Select("select * from user where email = #{email}")
     User findUserByEmail(String email);
 
+    @Select("select * from user where id = #{id}")
+    User findUserById(Integer id);
 }

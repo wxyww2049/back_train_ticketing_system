@@ -20,4 +20,15 @@ public class Fellow {
     private String email;
     private String status;
     private String idCode;
+    public Fellow(String userName, String email, String status, String idCode) {
+        this.userName = userName;
+        this.email = email;
+        this.status = status;
+        this.idCode = idCode;
+    }
+    public Fellow(String idCode,String userName) {
+        this.userName = userName;
+        this.idCode = idCode;
+        this.status = "1";
+    }
 }

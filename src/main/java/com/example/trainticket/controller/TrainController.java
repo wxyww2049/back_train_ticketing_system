@@ -12,6 +12,9 @@ import com.example.trainticket.bean.AlipayConfig;
 import com.example.trainticket.bean.Result;
 import com.example.trainticket.data.po.Alipay;
 import com.example.trainticket.data.po.Carriage;
+import com.example.trainticket.data.po.Fellow;
+import com.example.trainticket.data.vo.OrderTicket;
+import com.example.trainticket.data.vo.SempleUserInfo;
 import com.example.trainticket.data.vo.TrainDetail;
 import com.example.trainticket.service.CarriageService;
 import com.example.trainticket.service.TrainService;
@@ -23,6 +26,7 @@ import javax.servlet.http.HttpServletRequest;
 import java.net.URLEncoder;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -53,11 +57,18 @@ public class TrainController {
         return  carriageService.getCarriageByTrainNoAndStationNo(trainNo,stationNo);
     }
     @PostMapping("/buyTicket")
-    Result buyTicket(@RequestHeader("token") String token, @RequestBody Map<String, Object> params) {
-        return  trainService.buyTicket(jwtUtil.verifyToken(token).get("id").asInt(),params.get("trainNo").toString(),
-                (Integer)params.get("fromStationCode"),(Integer)params.get("toStationCode"),(Integer)params.get("seatType"),
-                (Integer)params.get("seatPos"));
+    Result buyTicket(@RequestHeader("token") String token, @RequestBody OrderTicket params) {
+        try {
+
+            return  trainService.buyTicket(jwtUtil.verifyToken(token).get("id").asInt(),params.getTrainNo(),
+                    params.getFromStationCode(),params.getToStationCode(),params.getSeatType(),
+                    params.getSeatPos(),params.getFellowers());
+        } catch (Exception e) {
+            e.printStackTrace();
+            return Result.error("购票失败");
+        }
     }
+
     @GetMapping("/pay") // &subject=xxx&traceNo=xxx&totalAmount=xxx
     String pay(@RequestParam(value = "id",required = true) Integer ticket_id)  {
 
