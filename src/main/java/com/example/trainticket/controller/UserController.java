@@ -8,10 +8,7 @@ import com.example.trainticket.service.UserService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
 
@@ -25,7 +22,7 @@ public class UserController {
     @PostMapping("/signup")
     public Result signup(@RequestBody User data) {
         log.info("start signup for user: " + data.getUserName() + " email: " + data.getEmail());
-        return userService.signup(data.getUserName(), data.getPassword(), data.getEmail());
+        return userService.signup(data.getUserName(), data.getPassword(), data.getEmail(), data.getIdCode());
 //        return Result.success("注册成功");
     }
     @PostMapping("/login")
@@ -64,4 +61,17 @@ public class UserController {
             return Result.error(StatusCode.PARAM_NOT_COMPLETE);
         }
     }
+
+    @Auth(identify = {"USER","ROOT","ADMIN"})
+    @GetMapping("/information")
+    public Result getUserInformation(@RequestHeader("token") String token) {
+        try {
+            return userService.getInformation(token);
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+            return Result.error(StatusCode.PARAM_NOT_COMPLETE);
+        }
+    }
+
 }
