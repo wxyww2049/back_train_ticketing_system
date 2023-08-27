@@ -70,13 +70,42 @@ public class FellowService {
         }
     }
 
+    public Result update(String id, String userName, String idCode, String token) {
+        try {
+            Map<String, Claim> claimMap = jwtUtil.verifyToken(token);
+            String email = claimMap.get("email").asString();
+            log.info("0");
+            Fellow fellow = new Fellow();
+            log.info("1");
+            fellow.setId(Integer.valueOf(id));
+            log.info("2");
+            fellow.setUserName(userName);
+            fellow.setEmail(email);
+            fellow.setIdCode(idCode);
+            fellow.setStatus("1");
+            log.info("3");
+            try {
+                log.info("fellow"+ fellow);
+                fellowMapper.upFellow(fellow);
+            }
+            catch (Exception e) {
+                e.printStackTrace();
+                return Result.error("更新失败");
+            }
+            return Result.success("更新成功");
+        } catch (Exception e) {
+            return Result.error("token无效");
+        }
+    }
+
     public Result delete(String id, String token) {
         try {
             Map<String, Claim> claimMap = jwtUtil.verifyToken(token);
             fellowMapper.deleteFellow(id);
-            return Result.success("修改成功");
+            return Result.success("删除成功");
         } catch (Exception e) {
-            return Result.error(String.valueOf(e));
+            log.info(String.valueOf(e));
+            return Result.error("删除失败");
         }
     }
 

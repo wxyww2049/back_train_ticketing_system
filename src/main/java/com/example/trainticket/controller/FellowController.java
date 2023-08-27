@@ -35,4 +35,22 @@ public class FellowController {
         return fellowService.delete(String.valueOf(data.getId()), token);
     }
 
+    @PostMapping("/updateFellow")
+    public Result updateFellow(@RequestBody Fellow data, @RequestHeader("token") String token) {
+        log.info("start update fellow: " +data);
+        return fellowService.update(String.valueOf(data.getId()), data.getUserName(), data.getIdCode(), token);
+    }
+
+//    @PostMapping("/updateFellow")
+//    public Result updateFellow(@RequestBody Map<String,Object> data, @RequestHeader("token") String token) {
+//        log.info("start update fellow: " +data);
+//        try {
+//            return fellowService.update((String)data.get("id"), (String)data.get("userName"), (String)data.get("idCode"), token);
+//        }
+//        catch (Exception e) {
+//            e.printStackTrace();
+//            return Result.error(StatusCode.PARAM_NOT_COMPLETE);
+//        }
+//    }
+
 }
