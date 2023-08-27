@@ -5,7 +5,9 @@ import com.auth0.jwt.interfaces.Claim;
 import com.example.trainticket.annotation.Auth;
 import com.example.trainticket.bean.Result;
 import com.example.trainticket.bean.StatusCode;
+import com.example.trainticket.data.po.Train;
 import com.example.trainticket.data.po.User;
+import com.example.trainticket.data.vo.TrainDetail;
 import com.example.trainticket.mapper.UserMapper;
 import com.example.trainticket.utils.JwtUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -28,10 +30,10 @@ public class UserService {
     /**
      * 以后可能会添加邮箱验证
      */
-    public Result signup(String username, String password, String email) {
+    public Result signup(String username, String password, String email, String idCode) {
         User user = userMapper.findUserByEmail(email);
 
-        log.info("start signup for user: " + username + " email: " + email);
+        log.info("start signup for user: " + username + " email: " + email + "idCode: " + idCode);
         if(user != null) {
             return Result.error(StatusCode.USER_ACCOUNT_ALREADY_EXIST);
         }
@@ -42,6 +44,7 @@ public class UserService {
         user.setUserName(username);
         user.setPassword(encodedPwd);
         user.setEmail(email);
+        user.setIdCode(idCode);
         user.setRole("USER");
         String token = jwtUtil.createToken(user);
         user.setToken(token);
@@ -134,5 +137,18 @@ public class UserService {
             return Result.error("token无效");
         }
 
+    }
+    public Result getInformation(String token){
+        try{
+            Map<String, Claim> claimMap = jwtUtil.verifyToken(token);
+            String email = claimMap.get("email").asString();
+            User user = userMapper.findUserByEmail(email);
+            if(user == null) {
+                return Result.error(StatusCode.USER_ACCOUNT_NOT_EXIST);
+            }
+            return Result.success("success",user);
+        }catch(Exception e){
+            return Result.error("token无效");
+        }
     }
 }
