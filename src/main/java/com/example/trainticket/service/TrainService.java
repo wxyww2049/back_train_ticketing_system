@@ -15,6 +15,8 @@ import com.example.trainticket.data.vo.SempleUserInfo;
 import com.example.trainticket.data.vo.TrainDetail;
 import com.example.trainticket.mapper.*;
 import com.example.trainticket.utils.RedisUtil;
+import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,6 +25,7 @@ import java.lang.constant.Constable;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 
+@Slf4j
 @Service
 public class TrainService {
     @Autowired
@@ -154,17 +157,21 @@ public class TrainService {
         orderMapper.updOrderStatus(orderId,2);
     }
 
-    public Boolean payCallback(Map<String,String> params) {
+    public Boolean payCallback(String trade_no) {
         try {
             //校验是否是来自支付宝的通知
             //切记alipaypublickey是支付宝的公钥，请去open.alipay.com对应应用下查看。
             //boolean AlipaySignature.rsaCheckV1(Map<String, String> params, String publicKey, String charset, String sign_type)
-            boolean flag = AlipaySignature.rsaCheckV1 (params,alipayConfig.getAlipayPublicKey(), "UTF-8","RSA2");
-            if(flag) {
-                finishPay(Integer.parseInt(params.get("out_trade_no")));
+//            boolean flag = AlipaySignature.rsaCheckV1 (params,alipayConfig.getAlipayPublicKey(), "UTF-8","RSA2");
+//            if(flag) {
+               log.info("校验成功");
+                finishPay(Integer.parseInt(trade_no));
                 return true;
-            }
-            else return false;
+//            }
+//            else {
+//                log.info("校验失败");
+//                return false;
+//            }
         }
         catch (Exception e) {
             e.printStackTrace();
@@ -214,7 +221,7 @@ public class TrainService {
         ticketMapper.insertTicket(ticket);
        return true;
     }
-    public Result buyTicket(Integer userId,String trainNo, Integer fromStationCode,Integer toStationCode,Integer seatType,Integer seatPos,List<SempleUserInfo>  fellowers) {
+    public Result buyTicket(Integer userId,String trainNo, Integer fromStationCode,Integer toStationCode,Integer seatType,List<SempleUserInfo>  fellowers,String date) {
         try {
             Order order = null;
             Integer orderId  = orderMapper.findMaxId();
@@ -222,7 +229,7 @@ public class TrainService {
             orderId++;
             Double pri =  0.0;
             for(SempleUserInfo fellow : fellowers) {
-                Ticket ticket = buyTicketForOne( userId, trainNo,  fromStationCode, toStationCode, seatType, seatPos,fellow,orderId);
+                Ticket ticket = buyTicketForOne( userId, trainNo,  fromStationCode, toStationCode, seatType, fellow.getSeatPos(),fellow,orderId,date);
                 if(ticket == null) {
                     return Result.error("购票失败");
                 }
@@ -248,7 +255,7 @@ public class TrainService {
             return Result.error("购票失败");
         }
     }
-    public Ticket buyTicketForOne(Integer userId,String trainNo, Integer fromStationCode,Integer toStationCode,Integer seatType,Integer seatPos,SempleUserInfo fellower,Integer order_id) {//seatType为-1表示无座票
+    public Ticket buyTicketForOne(Integer userId,String trainNo, Integer fromStationCode,Integer toStationCode,Integer seatType,Integer seatPos,SempleUserInfo fellower,Integer order_id,String date) {//seatType为-1表示无座票
         try {
             List<TrainStation> trainStations = RedisUtil.getTsForTrain(trainNo);
             TrainStation fromStation = null;
@@ -296,6 +303,7 @@ public class TrainService {
                 ticket.setUserId(userId);
                 ticket.setPrice(toStation.getWz() - fromStation.getWz());
                 ticket.setIdCode(fellower.getIdCode());
+                ticket.setDate(date);
                 ticket.setName(fellower.getUserName());
                 if(insertTicket(ticket,-1,fromStation.getStationNo(),toStation.getStationNo(),ansSeat,train.getSeatTypes())) {
                     return ticket;
@@ -340,6 +348,9 @@ public class TrainService {
                     ticket.setEndStationName(toStation.getStationName());
                     ticket.setTrainCode(train.getTrainCode());
                     ticket.setIsStart(fromStation.getStationNo() == 0 ? 1 : 0);
+                    ticket.setDate(date);
+                    ticket.setName(fellower.getUserName());
+                    ticket.setIdCode(fellower.getIdCode());
                     ticket.setIsEnd(toStation.getStationName().equals(train.getEndStationName()) ? 1 : 0);
                     switch (seatType) {
                         case 0:

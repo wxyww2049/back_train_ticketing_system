@@ -9,6 +9,7 @@ import com.example.trainticket.mapper.TicketMapper;
 import com.example.trainticket.mapper.UserMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -50,6 +51,28 @@ public class TicketService {
         catch (Exception e) {
             e.printStackTrace();
             return Result.error("查询失败");
+        }
+    }
+    @Transactional
+    public void updOrderStatus(Integer orderId,Integer status) {
+        orderMapper.updOrderStatus(orderId,status);
+        ticketMapper.updStatusByOrderId(orderId,status);
+    }
+
+    public Result refundTicket(Integer usrId,Integer OrderId) {
+        try {
+
+            Order order = orderMapper.findOrderByOrderId(OrderId);
+            if(!order.getUserId().equals(usrId)) {
+                System.out.println(OrderId+" "+usrId+"=======================");
+                return Result.error("非法操作");
+            }
+            updOrderStatus(OrderId,3);
+            return Result.success("success");
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+            return Result.error("退票失败");
         }
     }
 

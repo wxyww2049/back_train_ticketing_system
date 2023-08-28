@@ -13,6 +13,6 @@ public class OrderTicket {
     private Integer fromStationCode;
     private Integer toStationCode;
     private Integer seatType;
-    private Integer seatPos;
+    private String date;
     private List<SempleUserInfo> fellowers;
 }

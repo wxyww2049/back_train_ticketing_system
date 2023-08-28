@@ -39,4 +39,5 @@ public class Ticket {
     private String name;
     private String idCode;
     private Integer orderId;
+    private String date;
 }

@@ -10,4 +10,5 @@ import lombok.NoArgsConstructor;
 public class SempleUserInfo {
     String idCode;
     String userName;
+    Integer seatPos;
 }

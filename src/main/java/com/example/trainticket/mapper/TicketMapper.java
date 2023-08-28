@@ -20,10 +20,10 @@ public interface TicketMapper extends BaseMapper<Train> {
     @Insert("INSERT INTO ticket (id, status, start_station_code, end_station_code, " +
             "start_station_name, end_station_name, train_no, train_code, is_start, " +
             "is_end, price, seat, start_time, end_time, arrive_day_diff, seat_type," +
-            "user_id,id_code,name,order_id) " +
+            "user_id,id_code,name,order_id,date) " +
             "VALUES (#{id}, #{status}, #{startStationCode}, #{endStationCode}, #{startStationName}, " +
             "#{endStationName}, #{trainNo}, #{trainCode}, #{isStart}, #{isEnd}, #{price}, #{seat}, " +
-            "#{startTime}, #{endTime}, #{arriveDayDiff}, #{seatType},#{userId},#{idCode},#{name},#{orderId})")
+            "#{startTime}, #{endTime}, #{arriveDayDiff}, #{seatType},#{userId},#{idCode},#{name},#{orderId},#{date})")
     void insertTicket(Ticket ticket);
 
     @Select("select * from ticket where user_id = #{userId}")

@@ -4,10 +4,7 @@ import com.example.trainticket.bean.Result;
 import com.example.trainticket.service.TicketService;
 import com.example.trainticket.utils.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 public class TicketController {
@@ -26,5 +23,9 @@ public class TicketController {
         return ticketService.queryOrder(jwtUtil.verifyToken(token).get("id").asInt());
     }
 
+    @PostMapping("/refundTicket")
+    Result refundTicket(@RequestHeader("token") String token,@RequestParam(value = "orderId",required = true) Integer OrderId) {
+        return ticketService.refundTicket(jwtUtil.verifyToken(token).get("id").asInt(),OrderId);
+    }
 
 }
