@@ -352,24 +352,27 @@ public class TrainService {
                     ticket.setName(fellower.getUserName());
                     ticket.setIdCode(fellower.getIdCode());
                     ticket.setIsEnd(toStation.getStationName().equals(train.getEndStationName()) ? 1 : 0);
+                    System.out.println(toStation);
+                    System.out.println("+++++++++++");
+                    System.out.println(fromStation);
                     switch (seatType) {
                         case 0:
-                            ticket.setPrice(toStation.getA1() - fromStation.getA1());
+                            ticket.setPrice(toStation.getA1() - (fromStation.getA1() == null ? 0 : fromStation.getA1()));
                             break;
                         case 1:
-                            ticket.setPrice(toStation.getA3() - fromStation.getA3());
+                            ticket.setPrice(toStation.getA3() - (fromStation.getA3()==null ? 0 :fromStation.getA3()));
                             break;
                         case 2:
-                            ticket.setPrice(toStation.getA4() - fromStation.getA4());
+                            ticket.setPrice(toStation.getA4() - (fromStation.getA4()==null ? 0 :fromStation.getA4()));
                             break;
                         case 3:
-                            ticket.setPrice(toStation.getM() - fromStation.getM());
+                            ticket.setPrice(toStation.getM() - (fromStation.getM()==null ? 0 :fromStation.getM()));
                             break;
                         case 4:
-                            ticket.setPrice(toStation.getO() - fromStation.getO());
+                            ticket.setPrice(toStation.getO() - (fromStation.getO()==null ? 0 :fromStation.getO()));
                             break;
                         case 5:
-                            ticket.setPrice(toStation.getA9() - fromStation.getA9());
+                            ticket.setPrice(toStation.getA9() - (fromStation.getA9()==null ? 0 :fromStation.getA9()));
                             break;
                         default:
                             break;
