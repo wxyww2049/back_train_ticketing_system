@@ -301,7 +301,7 @@ public class TrainService {
                 ticket.setArriveDayDiff(toStation.getArriveDayDiff() - fromStation.getArriveDayDiff());
                 ticket.setSeatType(-1);
                 ticket.setUserId(userId);
-                ticket.setPrice(toStation.getWz() - fromStation.getWz());
+                ticket.setPrice(toStation.getWz() - (fromStation.getWz() == null ? 0 : fromStation.getWz()));
                 ticket.setIdCode(fellower.getIdCode());
                 ticket.setDate(date);
                 ticket.setName(fellower.getUserName());
