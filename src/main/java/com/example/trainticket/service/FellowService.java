@@ -47,7 +47,7 @@ public class FellowService {
             Map<String, Claim> claimMap = jwtUtil.verifyToken(token);
             String email = claimMap.get("email").asString();
 //            检查是否存在同名的同行者
-            Fellow fellow = fellowMapper.getFellowByName(userName);
+            Fellow fellow = fellowMapper.getFellowIdCodeAndEmail(idCode,email);
             if(fellow != null) {
                 return Result.error(StatusCode.USER_ACCOUNT_ALREADY_EXIST);
             }

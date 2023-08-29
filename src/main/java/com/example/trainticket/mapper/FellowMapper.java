@@ -26,4 +26,7 @@ public interface FellowMapper {
 
     @Update("update huqfellow set `status` = 0 where id = #{id}")
     void deleteFellow(String id);
+
+    @Select("select * from huqfellow where `status` = 1 and id_code = #{idCode} and email = #{email}")
+    Fellow getFellowIdCodeAndEmail(String idCode,String email);
 }
