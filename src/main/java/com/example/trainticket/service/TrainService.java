@@ -95,7 +95,10 @@ public class TrainService {
             return Result.error("查询失败");
         }
     }
-    boolean checkSeat(int pos, int type,int num) {//座位编号，座位类型，期望位置
+    boolean checkSeat(Integer pos, Integer type,Integer num) {//座位编号，座位类型，期望位置
+        if(num == null) {
+            return true;
+        }
         if(type == 0) {
             return pos % 5 == num;
         }
