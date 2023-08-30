@@ -19,6 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.lang.constant.Constable;
@@ -224,7 +225,7 @@ public class TrainService {
         ticketMapper.insertTicket(ticket);
        return true;
     }
-    @Transactional
+    @Transactional(isolation = Isolation.SERIALIZABLE)
     public Result buyTicket(Integer userId,String trainNo, Integer fromStationCode,Integer toStationCode,Integer seatType,List<SempleUserInfo>  fellowers,String date) {
         try {
             Order order = null;
@@ -242,8 +243,6 @@ public class TrainService {
                     if(order == null) order = new Order(ticket);
                 }
             }
-
-
             /**
              * 1.生成订单
              */
