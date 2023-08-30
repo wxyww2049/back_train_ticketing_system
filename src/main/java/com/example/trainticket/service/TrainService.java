@@ -218,12 +218,13 @@ public class TrainService {
             }
         }
 
-        Integer tid = ticketMapper.findMaxId();
-        if(tid == null) tid = 0;
-        ticket.setId(tid + 1);
+//        Integer tid = ticketMapper.findMaxId();
+//        if(tid == null) tid = 0;
+//        ticket.setId(tid + 1);
         ticketMapper.insertTicket(ticket);
        return true;
     }
+    @Transactional
     public Result buyTicket(Integer userId,String trainNo, Integer fromStationCode,Integer toStationCode,Integer seatType,List<SempleUserInfo>  fellowers,String date) {
         try {
             Order order = null;

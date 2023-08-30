@@ -19,6 +19,7 @@ import java.util.List;
 @AllArgsConstructor
 @TableName("ticket")
 public class Ticket {
+    @TableId(type = IdType.AUTO)
     private Integer id;
     private Integer status;//1: 锁定，2：已支付，3：已退票，4：已取消
     private Integer startStationCode;
