@@ -5,6 +5,7 @@ import com.auth0.jwt.interfaces.Claim;
 import com.example.trainticket.annotation.Auth;
 import com.example.trainticket.bean.Result;
 import com.example.trainticket.bean.StatusCode;
+import com.example.trainticket.data.po.Order;
 import com.example.trainticket.data.po.Train;
 import com.example.trainticket.data.po.User;
 import com.example.trainticket.data.vo.TrainDetail;
@@ -15,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 //import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Map;
 
 @Slf4j
@@ -150,5 +152,25 @@ public class UserService {
         }catch(Exception e){
             return Result.error("token无效");
         }
+    }
+    public Result getAll(){
+        try{
+            List<User> users = userMapper.finAlldUser();
+            return Result.success("success",users);
+        }catch(Exception e){
+            e.printStackTrace();
+            return Result.error("token无效");
+        }
+    }
+    public Result forgetPwd(String email, String newPassword) {
+        User user = userMapper.findUserByEmail(email);
+        if(user == null) {
+            return Result.error(StatusCode.USER_ACCOUNT_NOT_EXIST);
+        }
+        user.setPassword(BCrypt.hashpw(newPassword,BCrypt.gensalt()));
+        String token = jwtUtil.createToken(user);
+        user.setToken(token);
+        userMapper.updUser(user);
+        return Result.success("修改成功",user);
     }
 }

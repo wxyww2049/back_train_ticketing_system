@@ -73,5 +73,25 @@ public class UserController {
             return Result.error(StatusCode.PARAM_NOT_COMPLETE);
         }
     }
+    @GetMapping("/getAllUser")
+    public Result getAllUser() {
+        try {
+            return userService.getAll();
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+            return Result.error(StatusCode.PARAM_NOT_COMPLETE);
+        }
+    }
 
+    @PostMapping("/forgetPwd")
+    public Result forgetPwd(@RequestBody Map<String,Object> data) {
+        try {
+            return userService.forgetPwd((String)data.get("email"), (String)data.get("newPassword"));
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+            return Result.error(StatusCode.PARAM_NOT_COMPLETE);
+        }
+    }
 }
