@@ -29,7 +29,7 @@ public interface OrderMapper {
     @Update("update orders set status = #{status} where id = #{id}")
     void updOrderStatus(Integer id, Integer status);
 
-    @Select("select * from orders where user_id = #{userId}")
+    @Select("select * from orders where user_id = #{userId} order by id desc")
     List<Order> findOrdersByUserId(Integer userId);
 
     @Select("select * from orders where id = #{orderId}")

@@ -196,7 +196,7 @@ public class TrainService {
         }
     }
     boolean checkSeat(Integer pos, Integer type,Integer num) {//座位编号，座位类型，期望位置
-        if(num == null) {
+        if(num == null || num == -1) {
             return true;
         }
         if(type == 0) {
@@ -345,7 +345,10 @@ public class TrainService {
             /**
              * 1.生成订单
              */
-            if(order == null) return Result.error("购票失败");
+            if(order == null) {
+                return Result.error("购票失败");
+
+            }
             order.setPrice(pri);
             order.setId(orderId);
             LocalDate currentDate = LocalDate.now();
@@ -439,10 +442,12 @@ public class TrainService {
                             break;
                         }
                     }
+                    pos -= 120;
                     if(ansId != -1) {
                         break;
                     }
                 }
+//                System.out.println(ansId);
                 if(ansId != -1) {
                     Ticket ticket = new Ticket();
                     ticket.setStatus(1);
