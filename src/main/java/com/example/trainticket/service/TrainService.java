@@ -9,10 +9,7 @@ import com.alipay.api.request.AlipayTradePagePayRequest;
 import com.example.trainticket.bean.AlipayConfig;
 import com.example.trainticket.bean.Result;
 import com.example.trainticket.data.po.*;
-import com.example.trainticket.data.vo.BaseRoute;
-import com.example.trainticket.data.vo.OrderTicket;
-import com.example.trainticket.data.vo.SempleUserInfo;
-import com.example.trainticket.data.vo.TrainDetail;
+import com.example.trainticket.data.vo.*;
 import com.example.trainticket.mapper.*;
 import com.example.trainticket.utils.RedisUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -23,6 +20,7 @@ import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.lang.constant.Constable;
+import java.sql.Time;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 
@@ -57,6 +55,105 @@ public class TrainService {
         res.setStations(trainMapper.getStationsByTrainNo(trainNo));
         return Result.success("success", res);
     }
+    Double calcPrice(Double p1, Double p2) {
+        if(p1 == null) {
+            return p2;
+        }
+        return p2 - p1;
+    }
+
+    String calcTimeDifference(Time time1,Time time2) {
+        long timeInMillis1 = time1.getTime();
+        long timeInMillis2 = time2.getTime();
+        long timeDifferenceInMillis = timeInMillis2 - timeInMillis1;
+        return (timeDifferenceInMillis / (1000 * 60 * 60)) + "小时" + ((timeDifferenceInMillis / (1000 * 60)) % 60) + "分钟";
+    }
+    Long calcTimeWait(Time time1,Time time2) {
+        long timeInMillis1 = time1.getTime();
+        long timeInMillis2 = time2.getTime();
+        long timeDifferenceInMillis = timeInMillis2 - timeInMillis1;
+        return timeDifferenceInMillis / (1000 * 60);
+    }
+    public  Result queryTransfer(Integer startStation, Integer endStation, String date) {
+        try {
+            List<TrainStation> startStations = RedisUtil.getTsForStation(startStation);
+            List<TsWithPrice> route1 = new ArrayList<>();
+
+            for(TrainStation ts:startStations) {
+                TrainStation tss = null;
+                List<TrainStation> tsfortrain = RedisUtil.getTsForTrain(ts.getTrainNo());
+//                System.out.println(tsfortrain);
+                for(TrainStation ts2 : tsfortrain) {
+
+                    if(startStation.equals(ts2.getStationCode())) {
+                        tss = ts2;
+                    }
+                    else if(tss != null) {
+                        route1.add(new TsWithPrice(ts2.getTrainNo(),ts2.getStationCode(),calcPrice(tss.getWz(),ts2.getWz()),ts2.getArriveTime()));
+                    }
+                }
+            }
+
+            Collections.sort(route1);
+//            System.out.println("!!!!");
+
+            List<TrainStation> endStations = RedisUtil.getTsForStation(endStation);
+            List<TsWithPrice> route2 = new ArrayList<>();
+            for(TrainStation ts:endStations) {
+                TrainStation tse = null;
+
+                List<TrainStation> tsfortrain = RedisUtil.getTsForTrain(ts.getTrainNo());
+                int sz = tsfortrain.size();
+                for(int i = sz - 1; i >= 0; i--) {
+                    TrainStation ts2 = tsfortrain.get(i);
+                    if(endStation.equals(ts2.getStationCode())) {
+                        tse = ts2;
+                    }
+                    else if(tse != null) {
+                        route2.add(new TsWithPrice(ts2.getTrainNo(),ts2.getStationCode(),calcPrice(ts2.getWz(),tse.getWz()),tse.getStartTime()));
+                    }
+                }
+            }
+            Collections.sort(route2);
+
+            List<TsWithPrice> t1 = new ArrayList<>();
+            List<TsWithPrice> t2 = new ArrayList<>();
+            for(int i = 0;i < route1.size(); i++) {
+                if(i == 0 || !route1.get(i).getStationCode().equals(route1.get(i - 1).getStationCode())) {
+                    t1.add(route1.get(i));
+                }
+            }
+            for(int i = 0;i < route2.size(); i++) {
+                if(i == 0 || !route2.get(i).getStationCode().equals(route2.get(i - 1).getStationCode())) {
+                    t2.add(route2.get(i));
+                }
+            }
+
+            int p = 0;
+            int cnt = 0;
+            List<TransferRoute> res = new ArrayList<>();
+            for(TsWithPrice ts : t1) {
+                while(p < t2.size() && t2.get(p).getStationCode().compareTo(ts.getStationCode()) < 0) {
+                    p++;
+                }
+                if(p >= t2.size()) {
+                    break;
+                }
+                if(t2.get(p).getStationCode().equals(ts.getStationCode()) && !t2.get(p).getTrainNo().equals(ts.getTrainNo()) && calcTimeWait(ts.getTime(),t2.get(p).getTime()) > 30) {
+                    cnt++;
+                    BaseRoute b1 = new BaseRoute(RedisUtil.getTrain(ts.getTrainNo()),startStation,ts.getStationCode());
+                    BaseRoute b2 = new BaseRoute(RedisUtil.getTrain(t2.get(p).getTrainNo()),t2.get(p).getStationCode(),endStation);
+                    TransferRoute tr = new TransferRoute(b1,b2,calcTimeDifference(b1.getStartTime(),b2.getArriveTime()),calcTimeWait(ts.getTime(),t2.get(p).getTime()));
+                    res.add(tr);
+                }
+            }
+            return Result.success("success", res);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return Result.error("查询失败");
+        }
+    }
     public Result queryTrain(Integer startStation, Integer endStation, String date) {
         try {
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm");
@@ -68,7 +165,7 @@ public class TrainService {
             List<BaseRoute> res = new ArrayList<BaseRoute>();
             for(TrainStation ss : startStations) {
 
-                while(p < endStations.size() && endStations.get(p).getTrainNo().compareTo(ss.getTrainNo()) > 0) {
+                while(p < endStations.size() && endStations.get(p).getTrainNo().compareTo(ss.getTrainNo()) < 0) {
                     p++;
                 }
 
@@ -88,6 +185,7 @@ public class TrainService {
                 return Result.success("success", res);
             }
             else {
+
                 return Result.error("未找到对应车次,可以考虑换乘方案");
             }
         }
@@ -355,9 +453,9 @@ public class TrainService {
                     ticket.setName(fellower.getUserName());
                     ticket.setIdCode(fellower.getIdCode());
                     ticket.setIsEnd(toStation.getStationName().equals(train.getEndStationName()) ? 1 : 0);
-                    System.out.println(toStation);
-                    System.out.println("+++++++++++");
-                    System.out.println(fromStation);
+//                    System.out.println(toStation);
+//                    System.out.println("+++++++++++");
+//                    System.out.println(fromStation);
                     switch (seatType) {
                         case 0:
                             ticket.setPrice(toStation.getA1() - (fromStation.getA1() == null ? 0 : fromStation.getA1()));

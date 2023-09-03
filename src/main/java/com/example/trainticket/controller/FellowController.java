@@ -29,6 +29,8 @@ public class FellowController {
         return fellowService.insert(data.getUserName(), data.getIdCode(), token);
     }
 
+
+
     @PostMapping("/deleteFellow")
     public Result deleteFellow(@RequestBody Fellow data, @RequestHeader("token") String token) {
         log.info("start delete fellow: " +data);
