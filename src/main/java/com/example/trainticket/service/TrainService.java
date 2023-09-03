@@ -21,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.lang.constant.Constable;
 import java.sql.Time;
+import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 
@@ -154,13 +155,13 @@ public class TrainService {
             return Result.error("查询失败");
         }
     }
+
     public Result queryTrain(Integer startStation, Integer endStation, String date) {
         try {
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm");
             List<TrainStation>  startStations = RedisUtil.getTsForStation(startStation);
             List<TrainStation>  endStations = RedisUtil.getTsForStation(endStation);
             // 得到列车已经是按照train_no排序后的，只要用双指针求即可。
-//            System.out.println("======" + startStations.size() + "=======");
             int p = 0;
             List<BaseRoute> res = new ArrayList<BaseRoute>();
             for(TrainStation ss : startStations) {
@@ -347,8 +348,11 @@ public class TrainService {
             if(order == null) return Result.error("购票失败");
             order.setPrice(pri);
             order.setId(orderId);
+            LocalDate currentDate = LocalDate.now();
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+            String formattedDate = currentDate.format(formatter);
+            order.setOrderTime(formattedDate);
             orderMapper.addOrder(order);
-
             return payForTicket(orderId);
         }
         catch (Exception e) {
