@@ -143,7 +143,7 @@ public class TrainService {
                     cnt++;
                     BaseRoute b1 = new BaseRoute(RedisUtil.getTrain(ts.getTrainNo()),startStation,ts.getStationCode());
                     BaseRoute b2 = new BaseRoute(RedisUtil.getTrain(t2.get(p).getTrainNo()),t2.get(p).getStationCode(),endStation);
-                    TransferRoute tr = new TransferRoute(b1,b2,calcTimeDifference(b1.getStartTime(),b2.getArriveTime()),calcTimeWait(ts.getTime(),t2.get(p).getTime()));
+                    TransferRoute tr = new TransferRoute(b1,b2);
                     res.add(tr);
                 }
             }

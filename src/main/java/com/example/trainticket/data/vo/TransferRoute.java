@@ -10,6 +10,4 @@ import lombok.NoArgsConstructor;
 public class TransferRoute {
     BaseRoute firstRoute;
     BaseRoute secondRoute;
-    String timeDifference;
-    Long timeWait;
 }

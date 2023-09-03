@@ -44,7 +44,7 @@ public class BaseRoute {
     private Integer  cntA3;
     private boolean isStart;//是否是始发站
     private boolean isEnd;//是否是终点站
-
+    private Integer dayDiff;//抵达相差天数
 
 
     public BaseRoute(Train train) {
@@ -72,7 +72,7 @@ public class BaseRoute {
         this.arriveTime = end.getArriveTime();
         this.isStart = start.getStationName().equals(train.getStartStationName());
         this.isEnd = end.getStationName().equals(train.getEndStationName());
-
+        this.dayDiff = end.getArriveDayDiff() - start.getArriveDayDiff();
         BitSet ansSeat = null;
         this.cntWz = 120 * 10;
 
@@ -172,6 +172,7 @@ public class BaseRoute {
         this.arriveTime = end.getArriveTime();
         this.isStart = start.getStationName().equals(train.getStartStationName());
         this.isEnd = end.getStationName().equals(train.getEndStationName());
+        this.dayDiff = end.getArriveDayDiff() - start.getArriveDayDiff();
 
 
         BitSet ansSeat = null;
