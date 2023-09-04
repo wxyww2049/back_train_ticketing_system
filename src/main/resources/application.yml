@@ -45,4 +45,4 @@ alipay:
 #  异步通知地址，还需在支付宝开放平台配置
   notifyUrl: "http://train-server.wxyww.top/payCallback"
 # 同步回调地址，还需在支付宝开放平台配置
-  returnUrl: "https://www.baidu.com/"
+  returnUrl: "http://train-client.wxyww.top/#/order"

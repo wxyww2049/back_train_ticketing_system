@@ -46,9 +46,10 @@ public class InitService implements ApplicationRunner {
         tmp.append("]");
         System.out.print("\r" + tmp );
     }
+
     private void InitTs() throws Exception {
         List<TrainStation> trainStations = trainStationMapper.getAllTrainStations();
-        trainStations.sort(Comparator.comparing(TrainStation::getStationNo));
+        trainStations.sort(Comparator.comparing(TrainStation::getStationNo).reversed());
         System.out.println("====init TsForTrains====");
         int cnt = 0;
         for (TrainStation trainStation : trainStations) {
@@ -61,7 +62,7 @@ public class InitService implements ApplicationRunner {
         System.out.println("====init TsForStations====");
         //按照列车编号直接插入到车站中，乘车方案可以使用双指针O(n)查询
         cnt = 0;
-        trainStations.sort(Comparator.comparing(TrainStation::getTrainNo));
+        trainStations.sort(Comparator.comparing(TrainStation::getTrainNo).reversed());
         for (TrainStation trainStation : trainStations) {
             processbar(cnt++, trainStations.size());
             RedisUtil.pushTsForStation(trainStation);
@@ -103,6 +104,7 @@ public class InitService implements ApplicationRunner {
         }
         System.out.println("====init redis success====");
     }
+
     private void initCarriage() {
         System.out.println("====init Carriage====");
         try {

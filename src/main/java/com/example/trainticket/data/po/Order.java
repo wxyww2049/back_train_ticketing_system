@@ -26,7 +26,9 @@ public class Order {
     private Time endTime;
     private Integer arriveDayDiff;
     private Integer userId;
+    private String OrderTime;
     public Order(Order order) {
+        this.id = order.getId();
         this.status = order.getStatus();
         this.startStationCode = order.getStartStationCode();
         this.endStationCode = order.getEndStationCode();

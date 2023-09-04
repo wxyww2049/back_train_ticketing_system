@@ -8,6 +8,7 @@ import com.alipay.api.internal.util.AlipaySignature;
 import com.alipay.api.request.AlipayOpenPublicTemplateMessageIndustryModifyRequest;
 import com.alipay.api.request.AlipayTradePagePayRequest;
 import com.alipay.api.response.AlipayOpenPublicTemplateMessageIndustryModifyResponse;
+import com.example.trainticket.annotation.Auth;
 import com.example.trainticket.bean.AlipayConfig;
 import com.example.trainticket.bean.Result;
 import com.example.trainticket.data.po.Alipay;
@@ -51,6 +52,14 @@ public class TrainController {
                       @RequestParam(value = "endStation", required = true) Integer endStation,
                       @RequestParam(value = "date", required = true) String date) {
         return trainService.queryTrain(startStation, endStation, date);
+    }
+
+    @Auth(identify = {"USER","ROOT","ADMIN"})
+    @PostMapping("/queryTransfer")
+    public Result queryTransfer(@RequestParam(value = "startStation", required = true) Integer startStation,
+                                @RequestParam(value = "endStation", required = true) Integer endStation,
+                                @RequestParam(value = "date", required = true) String date) {
+        return trainService.queryTransfer(startStation, endStation, date);
     }
     @GetMapping("/queryCarriage")
     Result queryCarriage(@RequestParam(value = "trainNo", required = true) String trainNo,

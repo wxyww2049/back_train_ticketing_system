@@ -9,6 +9,7 @@ import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.sql.Time;
+import java.util.Objects;
 
 @Data
 @NoArgsConstructor
@@ -30,4 +31,16 @@ public class TrainStation {
     private Double  a1;//硬座
     private Double  a4;//软卧
     private Double  a3;//硬卧
+
+    @Override
+    public boolean equals(Object o) {
+        if(this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        TrainStation that = (TrainStation) o;
+        return trainNo.equals(that.trainNo) && stationNo.equals(that.stationNo);
+    }
+    @Override
+    public int hashCode() {
+        return Objects.hash(trainNo, stationNo);
+    }
 }
