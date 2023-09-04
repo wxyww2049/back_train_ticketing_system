@@ -1,10 +1,13 @@
 package com.example.trainticket.mapper;
 
+import com.example.trainticket.data.po.Order;
 import com.example.trainticket.data.po.User;
 import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Update;
+
+import java.util.List;
 
 @Mapper
 public interface UserMapper {
@@ -20,4 +23,7 @@ public interface UserMapper {
 
     @Select("select * from user where id = #{id}")
     User findUserById(Integer id);
+
+    @Select("select * from user where role = 'USER'")
+    List<User> finAlldUser();
 }

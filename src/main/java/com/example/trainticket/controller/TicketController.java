@@ -28,4 +28,10 @@ public class TicketController {
         return ticketService.refundTicket(jwtUtil.verifyToken(token).get("id").asInt(),OrderId);
     }
 
+    @GetMapping("/getAllOrders")
+    Result queryAllOrders(@RequestHeader("token") String token) {
+        return ticketService.getAllOrder();
+    }
+
+
 }

@@ -34,4 +34,7 @@ public interface OrderMapper {
 
     @Select("select * from orders where id = #{orderId}")
     Order findOrderByOrderId(Integer orderId);
+
+    @Select("select * from orders")
+    List<Order> findAllOrders();
 }

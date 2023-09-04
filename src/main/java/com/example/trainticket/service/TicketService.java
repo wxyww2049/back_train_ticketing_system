@@ -53,6 +53,24 @@ public class TicketService {
             return Result.error("查询失败");
         }
     }
+
+    public Result getAllOrder() {
+        try {
+            List<Order> orderList = orderMapper.findAllOrders();
+            List<OrderVo> orderVoList = new ArrayList<>();
+            for(Order order : orderList) {
+                OrderVo orderVo = new OrderVo(order);
+                orderVo.setTickets(ticketMapper.findTicketsByOrderId(order.getId()));
+                orderVoList.add(orderVo);
+            }
+            return Result.success("success",orderVoList);
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+            return Result.error("查询失败");
+        }
+    }
+
     @Transactional
     public void updOrderStatus(Integer orderId,Integer status) {
         orderMapper.updOrderStatus(orderId,status);
