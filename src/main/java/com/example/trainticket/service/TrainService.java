@@ -111,7 +111,7 @@ public class TrainService {
                         tse = ts2;
                     }
                     else if(tse != null) {
-                        route2.add(new TsWithPrice(ts2.getTrainNo(),ts2.getStationCode(),calcPrice(ts2.getWz(),tse.getWz()),tse.getStartTime()));
+                        route2.add(new TsWithPrice(ts2.getTrainNo(),ts2.getStationCode(),calcPrice(ts2.getWz(),tse.getWz()),ts2.getStartTime()));
                     }
                 }
             }
@@ -142,12 +142,14 @@ public class TrainService {
                 }
                 if(t2.get(p).getStationCode().equals(ts.getStationCode()) && !t2.get(p).getTrainNo().equals(ts.getTrainNo()) && calcTimeWait(ts.getTime(),t2.get(p).getTime()) > 30) {
                     cnt++;
+//                    System.out.println(ts+"====" + t2.get(p));
                     BaseRoute b1 = new BaseRoute(RedisUtil.getTrain(ts.getTrainNo()),startStation,ts.getStationCode());
                     BaseRoute b2 = new BaseRoute(RedisUtil.getTrain(t2.get(p).getTrainNo()),t2.get(p).getStationCode(),endStation);
                     TransferRoute tr = new TransferRoute(b1,b2);
                     res.add(tr);
                 }
             }
+            res.sort(Comparator.comparing(TransferRoute::getTransTime));
             return Result.success("success", res);
 
         } catch (Exception e) {
