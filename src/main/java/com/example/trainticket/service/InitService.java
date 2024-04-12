@@ -122,17 +122,17 @@ public class InitService implements ApplicationRunner {
 
     @Override
     public void run(ApplicationArguments args) throws Exception {
-        Scanner scanner = new Scanner(System.in);
-        System.out.println("init redis? (y/n)");
-        String s = scanner.nextLine();
-        if(s.equals("y") || s.equals("Y")) {
+        // Scanner scanner = new Scanner(System.in);
+        // System.out.println("init redis? (y/n)");
+        // String s = scanner.nextLine();
+        // if(s.equals("y") || s.equals("Y")) {
             initRedis();
-        }
-        System.out.println("init Carriage? (y/n)");
-        s = scanner.nextLine();
-        if(s.equals("y") || s.equals("Y")) {
+        // }
+        // System.out.println("init Carriage? (y/n)");
+        // s = scanner.nextLine();
+        // if(s.equals("y") || s.equals("Y")) {
             initCarriage();
-        }
+        // }
 
         System.out.println("server start success!");
     }

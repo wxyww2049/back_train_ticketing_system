@@ -33,7 +33,7 @@ public class UserController {
     /**
      * 生成管理员账号
      */
-    @Auth(identify = {"ROOT",})
+    @Auth(identify = {"ROOT"})
     @PostMapping("/generateAdmin")
     public Result generateAdmin(@RequestBody User data) {
         return userService.generateAdmin(data.getUserName(), data.getPassword(), data.getEmail());
@@ -84,6 +84,7 @@ public class UserController {
         }
     }
 
+    @Auth(identify = {"ROOT","ADMIN"})
     @PostMapping("/forgetPwd")
     public Result forgetPwd(@RequestBody Map<String,Object> data) {
         try {
